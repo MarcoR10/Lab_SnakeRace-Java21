@@ -19,8 +19,26 @@ R/ Cabe acalarar que el programa esta en la carpeta de "[wait-notify-excercise-m
     - Se **pausen** todos los hilos trabajadores.
     - Se **muestre** cuántos números primos se han encontrado.
     - El programa **espere ENTER** para **reanudar**.
+
+R/ Aqui esta una muestra de como se muestra en consola
+  - ![img.png](img.png)
+  - ![img_3.png](img_3.png)
+
 3. La sincronización debe usar **`synchronized`**, **`wait()`**, **`notify()` / `notifyAll()`** sobre el **mismo monitor** (sin _busy-waiting_).
+    
+    - Synchronized y wait
+
+    ![img_4.png](img_4.png)
+
+   - notifyall
+    
+    ![img_5.png](img_5.png)
+
+
 4. Entrega en el reporte de laboratorio **las observaciones y/o comentarios** explicando tu diseño de sincronización (qué lock, qué condición, cómo evitas _lost wakeups_).
+
+R/ Para este caso utilizamos un monitor basado en un bloqueo (bloqueo) explicito con un objeto compartido y una variable condicional (candado).
+Este diseño evita los "Lost wakeups" mediante notificacion explicita (desbloquear) el cual ejecuta un (notifyAll) ademas de utilizar del uso de un while y una condicion de bloqueo antes del (wait)
 
 > Objetivo didáctico: practicar suspensión/continuación **sin** espera activa y consolidar el modelo de monitores en Java.
 
@@ -73,17 +91,58 @@ co.eci.snake
 ```
 ### 1) Análisis de concurrencia
 
-- Explica **cómo** el código usa hilos para dar autonomía a cada serpiente.
-- **Identifica** y documenta en **`el reporte de laboratorio`**:
+  - Explica **cómo** el código usa hilos para dar autonomía a cada serpiente.
+
+  R/La autonomia de las serpientes se logra mediante la interfaz "Runnable" en la clase SnakeRunner, cada intancia encapsula a una serpinete
+    y al tablarero ejecutando un bucle independiente dentro de su propio hilo. 
+
+  -**Identifica** y documenta en **`el reporte de laboratorio`**:
+
   - Posibles **condiciones de carrera**.
+
+  R/ Una posible condición carrera es la posicion de las serpientes, ya que estas deben estarse registrando al mismo tiempo para evitar coliciones entre las mismas,
+    además existe la posibilidad de que las serpientes se salgan del tablero.
+
   - **Colecciones** o estructuras **no seguras** en contexto concurrente.
+
+  R/ - Hashset
+     - Hasmap
+    ya que si se añaden o remueven elementos fuera de secciones sincronizadas en métodos no mostrados, se producirán excepciones o corrupción de datos.
+
   - Ocurrencias de **espera activa** (busy-wait) o de sincronización innecesaria.
+
+  R/ El metodo MoveResult bloquea toda la instancia de Board cada vez que cualquier serpiente intenta dar un paso.
+  Si hay múltiples serpientes, los hilos se encadenan esperando por el mismo cerrojo.
+
+  Los getters como mice(), obstacles(), turbo() y teleports() crean nuevas copias de las colecciones dentro de bloques synchronized. Copiar estructuras completas bajo un lock genera sobrecarga y detiene a otros hilos ejecutando step().
+
 
 ### 2) Correcciones mínimas y regiones críticas
 
 - **Elimina** esperas activas reemplazándolas por **señales** / **estados** o mecanismos de la librería de concurrencia.
+
+![img_6.png](img_6.png)
+![img_7.png](img_7.png)
+
 - Protege **solo** las **regiones críticas estrictamente necesarias** (evita bloqueos amplios).
+
+![img_8.png](img_8.png)
+
 - Justifica en **`el reporte de laboratorio`** cada cambio: cuál era el riesgo y cómo lo resuelves.
+
+R/ Eliminación de espera activa (Thread.sleep)
+
+-Riesgo previo: El uso de Thread.sleep() dentro de un bucle while bloquea el hilo de ejecución durante el tiempo de espera. 
+Esto genera una espera activa (busy-waiting) que consume recursos del sistema de forma ineficiente, degrada la capacidad de respuesta ante interrupciones externas.
+
+-Solución: Se reemplaza el bucle y la suspensión manual por la programación periódica de tareas mediante ScheduledExecutorService con scheduleWithFixedDelay(). 
+El framework de concurrencia gestiona los tiempos de ejecución mediante temporizadores del sistema operativo, liberando el hilo cuando no hay trabajo activo que realizar.
+
+-Riesgo previo (Condición de Carrera y Estado Inconsistente): Interferencia mutua al evaluar y modificar celdas: 
+Si dos serpientes intentan moverse a la misma posición al mismo tiempo, ambas podrían leer que el ratón existe y ejecutar mice.remove(next) con éxito. Esto provocaría que ambas creyeran haber comido el ratón, duplicando la puntuación, creciendo ambas e insertando múltiples elementos nuevos en el tablero simultáneamente.
+
+-Solución mediante synchronized:Al marcar el método step (o el bloque crítico interno) con synchronized, se garantiza la exclusión mutua mediante el cerrojo del objeto Board (this). Solamente una serpiente a la vez puede evaluar su próximo paso, modificar el estado de las colecciones (mice, obstacles, turbo) y regenerar elementos en el tablero. 
+Esto convierte la actualización del estado del juego en una operación atómica
 
 ### 3) Control de ejecución seguro (UI)
 

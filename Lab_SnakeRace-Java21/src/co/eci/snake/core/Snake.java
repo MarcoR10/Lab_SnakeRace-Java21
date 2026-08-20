@@ -4,6 +4,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 public final class Snake {
+
   private final Deque<Position> body = new ArrayDeque<>();
   private volatile Direction direction;
   private int maxLength = 5;
@@ -38,4 +39,5 @@ public final class Snake {
     if (grow) maxLength++;
     while (body.size() > maxLength) body.removeLast();
   }
+
 }
