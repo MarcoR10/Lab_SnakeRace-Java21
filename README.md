@@ -152,6 +152,17 @@ Esto convierte la actualización del estado del juego en una operación atómica
   - La **peor serpiente** (la que **primero murió**).
 - Considera que la suspensión **no es instantánea**; coordina para que el estado mostrado no quede “a medias”.
 
+R/ El botón ahora sí pausa el juego de verdad (antes solo dejaba de dibujar, pero las
+serpientes seguían moviéndose por dentro). Al presionar "Pausar", se espera a que cada
+serpiente termine su movimiento actual antes de detenerla, para que las estadísticas que
+se muestran (serpiente viva más larga y la primera en morir) sean consistentes y no queden
+"a medias". El botón cambia entre "Pausar" y "Reanudar", y arriba del tablero aparece una
+etiqueta con esas dos estadísticas.
+
+![img_9.png](img_9.png)
+![img_10.png](img_10.png)
+![img_11.png](img_11.png)
+
 ### 4) Robustez bajo carga
 
 - Ejecuta con **N alto** (`-Dsnakes=20` o más) y/o aumenta la velocidad.
@@ -159,6 +170,20 @@ Esto convierte la actualización del estado del juego en una operación atómica
 - Si habilitas **teleports** y **turbo**, verifica que las reglas no introduzcan carreras.
 
 > Entregables detallados más abajo.
+
+R/ Se agregó una regla nueva: si una serpiente choca contra su propio cuerpo, muere (se
+pinta de gris y deja de moverse). Esta verificación se hizo dentro de la misma zona
+protegida que ya existía en el tablero, sin necesidad de bloquear a las demás serpientes,
+ya que cada una solo revisa su propio cuerpo. Se probó con 20 serpientes a la vez
+ sin que el programa se rompiera ni arrojara errores.
+
+![img_12.png](img_12.png)
+
+---
+
+## Build
+
+![img_13.png](img_13.png)
 
 ---
 
